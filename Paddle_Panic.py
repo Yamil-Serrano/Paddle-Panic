@@ -23,12 +23,6 @@ def ball_movement(dt):
     ball.x += ball_speed_x * dt
     ball.y += ball_speed_y * dt
 
-    # Initialize random ball movement when game starts
-    if start:
-        ball_speed_x = 400 * random.choice((1, -1))  # Random horizontal direction (pixels per second)
-        ball_speed_y = 400 * random.choice((1, -1))  # Random vertical direction (pixels per second)
-        start = False
-
     # --- COLLISION DETECTION ---
     
     # Player paddle collision (left paddle)
@@ -83,7 +77,7 @@ def cpu_movement(dt):
     """
     Handle CPU paddle movement - follows the ball
     """
-    cpu_speed = 300  # Pixels per second
+    cpu_speed = 350  # Pixels per second
     
     # AI logic: CPU paddle follows ball position with limited speed
     if player2.centery < ball.centery:
@@ -122,13 +116,18 @@ def restart():
     global ball_speed_x, ball_speed_y, start
     ball.center = (screen_width / 2, screen_height / 2)  # Center the ball
     ball_speed_y, ball_speed_x = 0, 0  # Stop ball movement
+    
+    # Reset player and cpu positions
+    player2.centery = ball.centery
+    player.centery = ball.centery 
+    
     start = False
 
 def handle_input(event):
     """
     Process keyboard input - using match/case
     """
-    global player_speed, start
+    global player_speed, start, ball_speed_x, ball_speed_y
     
     # Using match/case for efficient input handling
     match event.type:
@@ -143,7 +142,10 @@ def handle_input(event):
                 case pygame.K_DOWN:
                     player_speed += 1  # Move paddle down
                 case pygame.K_SPACE:
-                    start = True  # Start ball movement
+                    if not start:  # Solo permite iniciar el juego si no ha comenzado
+                        start = True
+                        ball_speed_x = 400 * random.choice((1, -1))  # Random horizontal direction
+                        ball_speed_y = 400 * random.choice((1, -1))  # Random vertical direction
                     
         case pygame.KEYUP:
             match event.key:
@@ -245,7 +247,7 @@ while True:
     
     # Update display and maintain frame rate
     pygame.display.flip()
-    clock.tick(75)  
+    clock.tick(60)  
 
     # if you wanna create a binary of the game, use this command in the terminal. Note: You need pyinstaller
     # pyinstaller --onefile --windowed --add-data "./Audio;Audio" --add-data "./icon;icon" --icon=./icon/ping-pong.ico Paddle_Panic.py
