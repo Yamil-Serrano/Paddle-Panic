@@ -1,9 +1,8 @@
 # Paddle Panic 
 
-## 🎮 About
-This project was inspired by a friend who was taking an introduction to programming class. After helping him develop a basic Pong game for his course, I became interested in the concept and decided to create my first version based on the structure of his code. From there, I expanded the idea by adding a CPU-controlled opponen and sound effects to enhance the gameplay experience. To ensure smooth performance across different screen refresh rates, I implemented delta time physics.
+**Paddle Panic** was inspired by a friend who was taking an introduction to programming class. After helping him with a basic Pong game project for his course, I became interested in the concept and decided to create my first version based on the structure of his code. From there, I expanded the idea by adding a CPU-controlled opponen and sound effects to enhance the gameplay experience. To ensure smooth performance across different screen refresh rates, I implemented delta time physics.
 
-## ✨ Features
+## Features
 - Adaptive ball physics using delta time for smooth gameplay on different frame rates
 - AI-controlled opponent with dynamic movement
 - Collision detection with paddles and walls
@@ -11,7 +10,11 @@ This project was inspired by a friend who was taking an introduction to programm
 - Score tracking and automatic resets after a point is scored
 - FPS counter for debugging
 
-## 🛠️ Installation & Running the Game
+## Screenshots
+![image](https://github.com/user-attachments/assets/35e5cf31-1551-450a-9647-4d3788703e67)
+
+
+##  Installation & Running the Game
 ### Prerequisites
 - Python 3.x
 - Pygame (install using `pip install pygame`)
@@ -30,12 +33,12 @@ This project was inspired by a friend who was taking an introduction to programm
    python paddle_panic.py
    ```
 
-## 🕹️ Controls
+##  Controls
 - **Arrow Up (↑)**: Move paddle up
 - **Arrow Down (↓)**: Move paddle down
 - **Spacebar**: Start the ball movement
 
-## 🔊 Sound Effects
+## Sound Effects
 The game includes sound effects for:
 - Paddle hits
 - Wall bounces
