@@ -3,6 +3,7 @@ import sys
 import os
 import random
 import time
+import math
 
 def resource_path(relative_path):
     """ Getting the absolute resources path for pyinstaller """
@@ -115,7 +116,7 @@ def restart():
     """
     global ball_speed_x, ball_speed_y, start
     ball.center = (screen_width / 2, screen_height / 2)  # Center the ball
-    ball_speed_y, ball_speed_x = 0, 0  # Stop ball movement
+    ball_speed_x, ball_speed_y = 0, 0  # Stop ball movement
     
     # Reset player and cpu positions
     player2.centery = ball.centery
@@ -123,11 +124,64 @@ def restart():
     
     start = False
 
+def draw_menu():
+    """
+    Draw the main menu screen
+    """
+    # Draw title
+    title_text = pygame.font.Font('freesansbold.ttf', 72).render('Paddle Panic', True, light_grey)
+    title_rect = title_text.get_rect(center=(screen_width/2, screen_height/4))
+    screen.blit(title_text, title_rect)
+    
+    # Draw menu options
+    for i, option in enumerate(menu_options):
+        # Selected option is brighter and larger
+        if i == menu_selected_index:
+            text = menu_large_font.render(option, True, (255, 255, 255))
+        else:
+            text = menu_small_font.render(option, True, light_grey)
+        
+        text_rect = text.get_rect(center=(screen_width/2, screen_height/2 + i * 70))
+        screen.blit(text, text_rect)
+    
+    # Draw instruction
+    instruction = menu_small_font.render('Press ENTER to select', True, light_grey)
+    instruction_rect = instruction.get_rect(center=(screen_width/2, screen_height - 50))
+    screen.blit(instruction, instruction_rect)
+    
+    # Draw ball at the position of the dot in "i"
+    ball_pos = ((screen_width / 2) + 181, screen_height / 4 - 30)
+    ball_radius = 10
+    pygame.draw.circle(screen, ball_color, ball_pos, ball_radius)
+
+def handle_menu_input(event):
+    """
+    Handle input specifically for the menu screen
+    """
+    global menu_selected_index, game_state
+    
+    match event.key:
+        case pygame.K_UP:
+            menu_selected_index = (menu_selected_index - 1) % len(menu_options)
+            paddle_hit_sound.play()
+        case pygame.K_DOWN:
+            menu_selected_index = (menu_selected_index + 1) % len(menu_options)
+            paddle_hit_sound.play()
+        case pygame.K_RETURN:
+            selected_option = menu_options[menu_selected_index]
+            match selected_option:
+                case "Start":
+                    game_state = "PLAYING"
+                    restart()
+                case "Exit":
+                    pygame.quit()
+                    sys.exit()
+
 def handle_input(event):
     """
     Process keyboard input - using match/case
     """
-    global player_speed, start, ball_speed_x, ball_speed_y
+    global player_speed, start, ball_speed_x, ball_speed_y, game_state
     
     # Using match/case for efficient input handling
     match event.type:
@@ -136,23 +190,32 @@ def handle_input(event):
             sys.exit()
             
         case pygame.KEYDOWN:
-            match event.key:
-                case pygame.K_UP:
-                    player_speed -= 1  # Move paddle up
-                case pygame.K_DOWN:
-                    player_speed += 1  # Move paddle down
-                case pygame.K_SPACE:
-                    if not start:  # Solo permite iniciar el juego si no ha comenzado
-                        start = True
-                        ball_speed_x = 400 * random.choice((1, -1))  # Random horizontal direction
-                        ball_speed_y = 400 * random.choice((1, -1))  # Random vertical direction
+            # Menu state handling
+            if game_state == "MENU":
+                handle_menu_input(event)
+            # Playing state handling
+            elif game_state == "PLAYING":
+                match event.key:
+                    case pygame.K_UP:
+                        player_speed -= 1  # Move paddle up
+                    case pygame.K_DOWN:
+                        player_speed += 1  # Move paddle down
+                    case pygame.K_SPACE:
+                        if not start:  # Solo permite iniciar el juego si no ha comenzado
+                            start = True
+                            ball_speed_x = 400 * random.choice((1, -1))  # Random horizontal direction
+                            ball_speed_y = 400 * random.choice((1, -1))  # Random vertical direction
+                    case pygame.K_ESCAPE:
+                        game_state = "MENU"
+                        start = False
                     
         case pygame.KEYUP:
-            match event.key:
-                case pygame.K_UP:
-                    player_speed += 1  # Stop moving up
-                case pygame.K_DOWN:
-                    player_speed -= 1  # Stop moving down
+            if game_state == "PLAYING":
+                match event.key:
+                    case pygame.K_UP:
+                        player_speed += 1  # Stop moving up
+                    case pygame.K_DOWN:
+                        player_speed -= 1  # Stop moving down
 
 # --- GAME INITIALIZATION ---
 
@@ -169,8 +232,8 @@ pygame.display.set_caption('Paddle Panic')
 
 # Colors 
 light_grey = (200, 200, 200)
-ball_color = (170,111,115)
-paddle_color1 = (102,84,94)
+ball_color = (170, 111, 115)
+paddle_color1 = (102, 84, 94)
 bg_color = (174, 156, 157)
 
 # Game objects
@@ -193,6 +256,15 @@ player_score = 0
 player2_score = 0
 start = False
 
+# Game state
+game_state = "MENU"  # Can be "MENU" or "PLAYING"
+
+# Menu variables
+menu_options = ["Start", "Exit"]
+menu_selected_index = 0
+menu_large_font = pygame.font.Font('freesansbold.ttf', 48)
+menu_small_font = pygame.font.Font('freesansbold.ttf', 28)
+
 # Font for score display
 basic_font = pygame.font.Font('freesansbold.ttf', 32)
 
@@ -213,41 +285,45 @@ while True:
     for event in pygame.event.get():
         handle_input(event)
 
-
-    # Update game state with delta time
-    ball_movement(dt)
-    player_movement(dt)
-    cpu_movement(dt)
-
-    # Render graphics
+    # Clear screen
     screen.fill(bg_color)
     
-    # Draw middle dashed line
-    draw_dashed_line()
-    
-    # Draw paddles with rounded corners
-    pygame.draw.rect(screen, paddle_color1, player, border_radius=7)
-    pygame.draw.rect(screen, paddle_color1, player2, border_radius=7)
-    
-    # Draw ball
-    pygame.draw.ellipse(screen, ball_color, ball)
-    
-    # Display scores
-    player_text = basic_font.render(f'{player_score}', False, light_grey)
-    player2_text = basic_font.render(f'{player2_score}', False, light_grey)
-    
-    # Position scores on their respective sides
-    screen.blit(player_text, (screen_width/4, 20))  # Left side
-    screen.blit(player2_text, (3*screen_width/4, 20))  # Right side
-    
-    # Display FPS for debugging
-    fps = int(clock.get_fps())
-    fps_text = pygame.font.Font('freesansbold.ttf', 16).render(f'FPS: {fps}', False, light_grey)
-    screen.blit(fps_text, (10, screen_height - 30))
+    # Handle different game states
+    if game_state == "MENU":
+        draw_menu()
+    elif game_state == "PLAYING":
+        # Update game state with delta time
+        ball_movement(dt)
+        player_movement(dt)
+        cpu_movement(dt)
+        
+        # Draw middle dashed line
+        draw_dashed_line()
+        
+        # Draw paddles with rounded corners
+        pygame.draw.rect(screen, paddle_color1, player, border_radius=7)
+        pygame.draw.rect(screen, paddle_color1, player2, border_radius=7)
+        
+        # Draw ball
+        pygame.draw.ellipse(screen, ball_color, ball)
+        
+        # Display scores
+        player_text = basic_font.render(f'{player_score}', False, light_grey)
+        player2_text = basic_font.render(f'{player2_score}', False, light_grey)
+        
+        # Position scores on their respective sides
+        screen.blit(player_text, (screen_width/4, 20))  # Left side
+        screen.blit(player2_text, (3*screen_width/4, 20))  # Right side
+        
+        # Display game instructions
+        if not start:
+            instruction = pygame.font.Font('freesansbold.ttf', 20).render('Press SPACE to start', False, light_grey)
+            screen.blit(instruction, (screen_width/2 - instruction.get_width()/2, screen_height - 50))
+            
+        # Display escape hint
+        esc_hint = pygame.font.Font('freesansbold.ttf', 16).render('ESC for menu', False, light_grey)
+        screen.blit(esc_hint, (10, 10))
     
     # Update display and maintain frame rate
     pygame.display.flip()
-    clock.tick(60)  
-
-    # if you wanna create a binary of the game, use this command in the terminal. Note: You need pyinstaller
-    # pyinstaller --onefile --windowed --add-data "./Audio;Audio" --add-data "./icon;icon" --icon=./icon/ping-pong.ico Paddle_Panic.py
+    clock.tick(60)
