@@ -1,7 +1,17 @@
 import pygame
 import sys
+import os
 import random
 import time
+
+def resource_path(relative_path):
+    """ Getting the absolute resources path for pyinstaller """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
 
 def ball_movement(dt):
     """
@@ -167,10 +177,10 @@ player = pygame.Rect(10, (screen_height / 2) - 60, 15, 120)  # Player paddle (le
 player2 = pygame.Rect(screen_width - 25, (screen_height / 2) - 60, 15, 120)  # CPU paddle (right)
 
 # Load sound effects
-paddle_hit_sound = pygame.mixer.Sound("Audio/impactTin_medium_003.ogg")  
-paddle_hit_sound2 = pygame.mixer.Sound("Audio/impactTin_medium_001.ogg")
-score_sound = pygame.mixer.Sound("Audio/confirmation_001.ogg") 
-no_score_sound = pygame.mixer.Sound("Audio/error_003.ogg") 
+paddle_hit_sound = pygame.mixer.Sound(resource_path("Audio/impactTin_medium_003.ogg"))  
+paddle_hit_sound2 = pygame.mixer.Sound(resource_path("Audio/impactTin_medium_001.ogg"))
+score_sound = pygame.mixer.Sound(resource_path("Audio/confirmation_001.ogg"))
+no_score_sound = pygame.mixer.Sound(resource_path("Audio/error_003.ogg"))
 
 # Game variables
 ball_speed_x = 0
@@ -236,3 +246,6 @@ while True:
     # Update display and maintain frame rate
     pygame.display.flip()
     clock.tick(75)  
+
+    # if you wanna create a binary of the game, use this command in the terminal. Note: You need pyinstaller
+    # pyinstaller --onefile --windowed --add-data "./Audio;Audio" --add-data "./icon;icon" --icon=./icon/ping-pong.ico Paddle_Panic.py
