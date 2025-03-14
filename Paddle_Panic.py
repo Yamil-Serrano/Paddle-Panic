@@ -18,11 +18,18 @@ def ball_movement(dt):
     """
     Handle all ball movement and collision logic
     """
-    global ball_speed_x, ball_speed_y, player_score, player2_score, start
+    global ball_speed_x, ball_speed_y, player_score, player2_score, start, speed_multiplier, last_speed_increase_time
 
-    # Move the ball according to its speed, scaled by delta time
-    ball.x += ball_speed_x * dt
-    ball.y += ball_speed_y * dt
+    # Move the ball with speed scaled by delta time and multiplier
+    ball.x += ball_speed_x * dt * speed_multiplier
+    ball.y += ball_speed_y * dt * speed_multiplier
+
+    # --- SPEED INCREASE LOGIC ---
+    current_time = time.time()
+    # Increase speed every 20 seconds up to a maximum of 1.5x
+    if current_time - last_speed_increase_time > 20 and speed_multiplier < 1.5:
+        speed_multiplier += 0.005 / (1 + speed_multiplier)
+        last_speed_increase_time = current_time
 
     # --- COLLISION DETECTION ---
     
@@ -65,9 +72,17 @@ def player_movement(dt):
     """
     Handle player paddle movement
     """
-    player_speed_pixels_per_second = player_speed * 300  # Convert to pixels per second
-    player.y += player_speed_pixels_per_second * dt  # Scale by delta time
-
+    global player_speed, speed_multiplier
+    
+    # Base speed for both player and CPU (identical for fairness)
+    base_speed = 300
+    
+    # Apply the same speed scaling as the CPU
+    current_speed = base_speed * (0.8 + (speed_multiplier * 0.2))
+    
+    # Move the player paddle
+    player.y += player_speed * current_speed * dt
+    
     # Keep paddle within screen boundaries
     if player.top <= 10:
         player.top = 10
@@ -76,15 +91,42 @@ def player_movement(dt):
 
 def cpu_movement(dt):
     """
-    Handle CPU paddle movement - follows the ball
+    Handle CPU AI movement - exactly the same speed as player for fairness
     """
-    cpu_speed = 350  # Pixels per second
+    global speed_multiplier
     
-    # AI logic: CPU paddle follows ball position with limited speed
-    if player2.centery < ball.centery:
-        player2.y += cpu_speed * dt  # Move down, scaled by delta time
-    elif player2.centery > ball.centery:
-        player2.y -= cpu_speed * dt  # Move up, scaled by delta time
+    # Base speed for both player and CPU (identical for fairness)
+    base_speed = 300
+    
+    # Apply the same speed scaling as the player
+    current_speed = base_speed * (0.8 + (speed_multiplier * 0.2))
+    
+    # Calculate where the ball will be when it reaches the CPU's side
+    if ball_speed_x > 0:  # Only predict when ball is moving toward CPU
+        # Simple prediction of ball's y-position when it reaches the paddle
+        time_to_reach = (player2.x - ball.x) / (ball_speed_x * speed_multiplier) if ball_speed_x != 0 else 0
+        predicted_y = ball.y + (ball_speed_y * speed_multiplier * time_to_reach)
+        
+        # Some randomization to make CPU imperfect (more human-like)
+        # Higher difficulty reduces randomness
+        randomness = 30 * (2.0 - speed_multiplier)
+        target_y = predicted_y + random.uniform(-randomness, randomness)
+        
+        # Ensure target stays within screen bounds
+        target_y = max(min(target_y, screen_height - player2.height/2 - 10), player2.height/2 + 10)
+        
+        # Move toward the predicted position at exactly the same speed capability as player
+        if player2.centery < target_y:
+            player2.y += current_speed * dt
+        elif player2.centery > target_y:
+            player2.y -= current_speed * dt
+    else:
+        # When ball is moving away, gradually return to center with some delay
+        if abs(player2.centery - screen_height/2) > 50:
+            if player2.centery < screen_height/2:
+                player2.y += (current_speed * 0.5) * dt
+            else:
+                player2.y -= (current_speed * 0.5) * dt
 
     # Keep paddle within screen boundaries
     if player2.top <= 10:
@@ -201,7 +243,7 @@ def handle_input(event):
                     case pygame.K_DOWN:
                         player_speed += 1  # Move paddle down
                     case pygame.K_SPACE:
-                        if not start:  # Solo permite iniciar el juego si no ha comenzado
+                        if not start:
                             start = True
                             ball_speed_x = 400 * random.choice((1, -1))  # Random horizontal direction
                             ball_speed_y = 400 * random.choice((1, -1))  # Random vertical direction
@@ -255,6 +297,9 @@ player2_speed = 0
 player_score = 0
 player2_score = 0
 start = False
+speed_multiplier = 1.0
+last_speed_increase_time = time.time()
+
 
 # Game state
 game_state = "MENU"  # Can be "MENU" or "PLAYING"
