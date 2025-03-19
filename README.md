@@ -49,6 +49,6 @@ If you want to replace or disable sounds, modify the `pygame.mixer.Sound()` call
 ## License
 This project is open-source and available under the MIT License.
 
----
+
 Happy playing! 🏓
 
