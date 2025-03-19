@@ -38,10 +38,8 @@
 ## Sound Effects
 The game includes sound effects for:
 - Paddle hits
-- Wall bounces
 - Scoring points
 
-If you want to replace or disable sounds, modify the `pygame.mixer.Sound()` calls in the script.
 
 ## Icon Attribution
 - **[Sports and competition icons](https://www.flaticon.com/free-icons/sports-and-competition)** created by [Freepik](https://www.flaticon.com/authors/freepik) - Flaticon
